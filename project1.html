@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="description"
-        content="CS180 Project 2 - Coming Soon">
-  <meta name="keywords" content="CS180, Computer Vision">
+        content="CS180 Project 1 - Colorizing the Prokudin-Gorskii Photo Collection">
+  <meta name="keywords" content="CS180, Computer Vision, Image Processing, Colorization">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CS180 Project 2</title>
+  <title>CS180 Project 1</title>
 
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
         rel="stylesheet">
@@ -84,16 +84,169 @@
     <div class="columns is-centered">
       <div class="column">
         <div class="content">
-          <div class="box has-background-info-light">
-            <h2 class="title is-3 has-text-centered">
-              <i class="fas fa-construction"></i>
-              Coming Soon
-            </h2>
-            <p class="has-text-centered is-size-5">
-              Project 1 content will be available soon. Stay tuned!
-            </p>
+          <h2 class="title is-3">Project Overview</h2>
+          <p class="is-size-5">
+            This project implements an automatic colorization algorithm for the digitized Prokudin-Gorskii glass plate images. 
+          </p>
+
+          <h2 class="title is-3">Approach</h2>
+          <p class="is-size-5">
+            My implementation uses a multi-scale pyramid approach for efficient and accurate alignment:
+          </p>
+          <ul class="is-size-5">
+            <li><strong>Channel Splitting:</strong> Divides the input image into three equal parts (B, G, R channels)</li>
+            <li><strong>Image Pyramid:</strong> Creates multi-scale representations for coarse-to-fine alignment</li>
+            <li><strong>Gradient-based Matching:</strong> Uses gradient magnitudes instead of raw pixel values for robust alignment</li>
+            <li><strong>Normalized Cross-Correlation (NCC):</strong> Measures alignment quality between channels</li>          </ul>
+
+          <h2 class="title is-3">Algorithm Details</h2>
+          <p class="is-size-5">
+            The algorithm works by:
+          </p>
+          <ol class="is-size-5">
+            <li>Building image pyramids by downsampling by factors of 2</li>
+            <li>Starting alignment at the coarsest level with a large search radius</li>
+            <li>Refining alignment at each finer level with smaller search windows</li>
+            <li>Using gradient magnitudes to compute NCC scores for better feature matching</li>
+            <li>Cropping borders to avoid edge artifacts during alignment</li>
+            <li>Stacking aligned channels into final RGB image</li>
+          </ol>
+
+          <ul class="is-size-5">
+            <li>For single-scale implementation, set the pyramid levels to 1.</li>
+            <li>The offsets are integer, pixel-wise translations wrt. the Blue channel.</li>
+          <h2 class="title is-3">Results on Example Images</h2>
+
+
+          <div class="columns is-multiline">
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Cathedral</h4>
+                <img src="./static/images/project_1/cathedral_colorized.png" alt="Cathedral colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (5, 2) | <strong>Red offset:</strong> (12, 3)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Monastery</h4>
+                <img src="./static/images/project_1/monastery_colorized.png" alt="Monastery colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (-3, 2) | <strong>Red offset:</strong> (3, 2)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Tobolsk</h4>
+                <img src="./static/images/project_1/tobolsk_colorized.png" alt="Tobolsk colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (3, 2) | <strong>Red offset:</strong> (6, 3)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Church</h4>
+                <img src="./static/images/project_1/church_colorized.png" alt="Church colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (25, 4) | <strong>Red offset:</strong> (58, -4)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Emir</h4>
+                <img src="./static/images/project_1/emir_colorized.png" alt="Emir colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (49, 24) | <strong>Red offset:</strong> (107, 40)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Harvesters</h4>
+                <img src="./static/images/project_1/harvesters_colorized.png" alt="Harvesters colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (60, 17) | <strong>Red offset:</strong> (124, 14)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Icon</h4>
+                <img src="./static/images/project_1/icon_colorized.png" alt="Icon colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (42, 17) | <strong>Red offset:</strong> (90, 23)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Italil</h4>
+                <img src="./static/images/project_1/italil_colorized.png" alt="Italil colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (39, 22) | <strong>Red offset:</strong> (77, 36)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Lastochikino</h4>
+                <img src="./static/images/project_1/lastochikino_colorized.png" alt="Lastochikino colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (-3, -2) | <strong>Red offset:</strong> (76, -8)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Lugano</h4>
+                <img src="./static/images/project_1/lugano_colorized.png" alt="Lugano colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (41, -17) | <strong>Red offset:</strong> (92, -29)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Melons</h4>
+                <img src="./static/images/project_1/melons_colorized.png" alt="Melons colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (80, 10) | <strong>Red offset:</strong> (177, 13)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Self Portrait</h4>
+                <img src="./static/images/project_1/self_portrait_colorized.png" alt="Self Portrait colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (78, 29) | <strong>Red offset:</strong> (175, 37)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Siren</h4>
+                <img src="./static/images/project_1/siren_colorized.png" alt="Siren colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (49, -6) | <strong>Red offset:</strong> (96, -24)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Three Generations</h4>
+                <img src="./static/images/project_1/three_generations_colorized.png" alt="Three Generations colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (54, 12) | <strong>Red offset:</strong> (111, 9)</p>
+              </div>
+            </div>
           </div>
+
+          <h2 class="title is-3">Personal Examples</h2>
+          <p class="is-size-5">
+            I also processed two additional images
+          </p>
+          <div class="columns is-multiline">
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Pictures 1</h4>
+                <img src="./static/images/project_1/my_pics_1_colorized.png" alt="My Pictures 1 colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (2, 2) | <strong>Red offset:</strong> (7, 1)</p>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Pictures 2</h4>
+                <img src="./static/images/project_1/my_pics_2_colorized.png" alt="My Pictures 2 colorized" style="width: 100%;">
+                <p class="is-size-6"><strong>Green offset:</strong> (5, -3) | <strong>Red offset:</strong> (12, -1)</p>
+              </div>
+            </div>
+          </div>
+
+
         </div>
+        <h2 class="title is-3">Bells and Whistles</h2>
+        <ul class="is-size-5">
+          <li><strong>Gradient-based features:</strong> Uses gradient magnitudes instead of raw pixels for more robust alignment</li>
+        
+        </ul>
       </div>
     </div>
   </div>
