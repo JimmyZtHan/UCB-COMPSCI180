@@ -106,7 +106,7 @@
             <div class="columns">
               <div class="column is-half">
                 <h5 class="title is-6">4-Loop Implementation</h5>
-                <pre><code>def convolve2d_four_loops(image, kernel):
+                <pre style="overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;"><code>def convolve2d_four_loops(image, kernel):
     kh, kw = kernel.shape
     pad_h, pad_w = kh // 2, kw // 2
     padded = zero_pad(image, pad_h, pad_w)
@@ -124,7 +124,7 @@
               </div>
               <div class="column is-half">
                 <h5 class="title is-6">2-Loop Implementation (Optimized)</h5>
-                <pre><code>def convolve2d_two_loops(image, kernel):
+                <pre style="overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;"><code>def convolve2d_two_loops(image, kernel):
     kh, kw = kernel.shape
     pad_h, pad_w = kh // 2, kw // 2
     padded = zero_pad(image, pad_h, pad_w)
@@ -149,7 +149,7 @@
             <div class="columns">
               <div class="column is-half">
                 <h5 class="title is-6">Finite Difference Kernels</h5>
-                <pre><code>def finite_difference_kernels():
+                <pre style="overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;"><code>def finite_difference_kernels():
     dx = np.array([[1.0, 0.0, -1.0]])  # X derivative
     dy = dx.T                          # Y derivative  
     return dx, dy
@@ -160,7 +160,7 @@ deriv_y = convolve2d_two_loops(image, dy)</code></pre>
               </div>
               <div class="column is-half">
                 <h5 class="title is-6">Edge Detection</h5>
-                <pre><code># Compute gradient magnitude
+                <pre style="overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;"><code># Compute gradient magnitude
 grad_x = scipy_convolve2d(image, dx, mode="same")
 grad_y = scipy_convolve2d(image, dy, mode="same")
 grad_mag = np.hypot(grad_x, grad_y)
