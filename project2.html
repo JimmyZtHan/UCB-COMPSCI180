@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="CS180 Project 2 - Filters and Frequencies: Implementation of convolution filters, hybrid images, and multiresolution blending">
+  <meta name="keywords" content="CS180, Computer Vision, Filters, Frequencies, Hybrid Images, Blending">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CS180 Project 2</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://cal-cs180.github.io/fa25/">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      <span>CS180 Home</span>
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          Projects
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="./index.html">
+            Project 0
+          </a>
+          <a class="navbar-item" href="./project1.html">
+            Project 1
+          </a>
+          <a class="navbar-item" href="./project2.html">
+            Project 2
+          </a>
+        </div>
+      </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">CS180 Project 2: Filters and Frequencies</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">CS180: Intro to Computer Vision and Computational Photography</span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Fall 2025</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="content">
+          <h2 class="title is-3">Project Overview</h2>
+          <p class="is-size-5">
+            This project explores filters and frequencies in computer vision through three main parts: implementing convolution filters from scratch, 
+            creating hybrid images using frequency filtering, and performing multiresolution blending using Gaussian and Laplacian stacks.
+          </p>
+
+          <!-- Part 1: Filters -->
+          <h2 class="title is-3">Part 1: Filters</h2>
+          <h3 class="title is-4">1.1 Finite Difference Operator</h3>
+
+          <!-- Convolution Implementation -->
+          <div class="box">
+            <h4 class="title is-4">Convolutions from Scratch</h4>
+            <img src="./static/images/project_2/results/part1/personal_box_comparison.png" alt="Box filter comparison" style="width: 100%;">
+            <p class="is-size-6">Comparison of SciPy convolution vs 4-loop and 2-loop implementations, showing identical results with very small numerical errors (< 1e-10)</p>
+            
+            <div class="columns">
+              <div class="column is-half">
+                <h5 class="title is-6">4-Loop Implementation</h5>
+                <pre><code>def convolve2d_four_loops(image, kernel):
+    kh, kw = kernel.shape
+    pad_h, pad_w = kh // 2, kw // 2
+    padded = zero_pad(image, pad_h, pad_w)
+    kernel_flipped = np.flip(np.flip(kernel, axis=0), axis=1)
+    out = np.zeros_like(image, dtype=np.float64)
+
+    for y in range(image.shape[0]):
+        for x in range(image.shape[1]):
+            value = 0.0
+            for i in range(kh):
+                for j in range(kw):
+                    value += kernel_flipped[i, j] * padded[y + i, x + j]
+            out[y, x] = value
+    return out</code></pre>
+              </div>
+              <div class="column is-half">
+                <h5 class="title is-6">2-Loop Implementation (Optimized)</h5>
+                <pre><code>def convolve2d_two_loops(image, kernel):
+    kh, kw = kernel.shape
+    pad_h, pad_w = kh // 2, kw // 2
+    padded = zero_pad(image, pad_h, pad_w)
+    kernel_flipped = np.flip(np.flip(kernel, axis=0), axis=1)
+    out = np.zeros_like(image, dtype=np.float64)
+
+    for y in range(image.shape[0]):
+        for x in range(image.shape[1]):
+            window = padded[y:y+kh, x:x+kw]
+            out[y, x] = np.sum(window * kernel_flipped)
+    return out</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Finite Difference Results -->
+          <div class="box">
+            <h4 class="title is-4">Finite Difference operators</h4>
+            <img src="./static/images/project_2/results/part1/personal_derivatives.png" alt="Personal image derivatives" style="width: 100%;">
+            <p class="is-size-6">X and Y derivatives showing horizontal and vertical edges respectively. The X derivative highlights vertical features while Y derivative highlights horizontal features.</p>
+            
+            <div class="columns">
+              <div class="column is-half">
+                <h5 class="title is-6">Finite Difference Kernels</h5>
+                <pre><code>def finite_difference_kernels():
+    dx = np.array([[1.0, 0.0, -1.0]])  # X derivative
+    dy = dx.T                          # Y derivative  
+    return dx, dy
+
+# Apply to image
+deriv_x = convolve2d_two_loops(image, dx)
+deriv_y = convolve2d_two_loops(image, dy)</code></pre>
+              </div>
+              <div class="column is-half">
+                <h5 class="title is-6">Edge Detection</h5>
+                <pre><code># Compute gradient magnitude
+grad_x = scipy_convolve2d(image, dx, mode="same")
+grad_y = scipy_convolve2d(image, dy, mode="same")
+grad_mag = np.hypot(grad_x, grad_y)
+
+# Threshold for edge map
+threshold = 0.2
+edge_map = (grad_mag >= threshold * grad_mag.max())</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="title is-4">1.2 Gradient Computation and Edge Detection</h3>
+          <p class="is-size-5">
+            Using the finite difference operators on the cameraman image to compute gradients and create an edge map by thresholding the gradient magnitude.
+          </p>
+
+          <div class="box">
+            <h4 class="title is-4">Cameraman Gradients and Edge Detection</h4>
+            <img src="./static/images/project_2/results/part1/cameraman_gradients.png" alt="Cameraman gradients" style="width: 100%;">
+            <p class="is-size-6">Left: Gradient in X direction. Middle: Gradient in Y direction. Right: Binary edge map created by thresholding the gradient magnitude at 20% of maximum value.</p>
+          </div>
+
+          <h3 class="title is-4">1.3 Derivative of Gaussian (DoG) Filter</h3>
+          <p class="is-size-5">
+            By first applying a Gaussian blur before computing derivatives, we can reduce noise in the edge detection.
+            This is mathematically equivalent to convolving with the derivative of a Gaussian kernel, but produces cleaner results.
+          </p>
+
+          <div class="box">
+            <h4 class="title is-4">Derivative of Gaussian Results</h4>
+            <img src="./static/images/project_2/results/part1/dog_gradients.png" alt="DoG gradients" style="width: 100%;">
+            <p class="is-size-6">Left: DoG gradient in X direction. Middle: DoG gradient in Y direction. Right: DoG edge map. Notice how the DoG approach produces cleaner edges with less noise compared to direct finite differences.</p>
+          </div>
+
+
+          <!-- Part 2.1: Image Sharpening -->
+          <h2 class="title is-3">Part 2.1: Image Sharpening</h2>
+          <p class="is-size-5">
+            Image sharpening is achieved using the unsharp masking filter: sharpened = original + α (original - blurred).
+          </p>
+
+          <div class="columns is-multiline">
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Taj Sharpening</h4>
+                <img src="./static/images/project_2/results/part2-Sharpen/example_image.png" alt="Taj Mahal sharpening" style="width: 100%;">
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="box">
+                <h4 class="title is-5">Image of my choice</h4>
+                <img src="./static/images/project_2/results/part2-Sharpen/my_image.png" alt="Personal image sharpening" style="width: 100%;">
+              </div>
+            </div>
+            <div class="column is-full">
+              <div class="box">
+                <h4 class="title is-5">Blur-Resharpen Evaluation</h4>
+                <img src="./static/images/project_2/results/part2-Sharpen/blur_resharp.png" alt="Blur then resharpen" style="width: 100%;">
+                <p class="is-size-6"> <strong>Observation:</strong> Even though the operations might seem symmetric, the re-sharpened image is noticeably less sharp than the original. This demonstrates that information lost during blurring cannot be perfectly recovered through sharpening alone.</p>
+              </div>
+            </div>
+        
+          </div>
+
+          <!-- Part 2.2: Hybrid Images -->
+          <h2 class="title is-3">Part 2.2: Hybrid Images</h2>
+          <p class="is-size-5">
+            Following Oliva et al.'s approach, hybrid images are created by combining the high frequencies of one image with the low frequencies of another. 
+            A low-pass filter (2D Gaussian) extracts low frequencies, while a high-pass filter (impulse - Gaussian) extracts high frequencies.
+          </p>
+
+          <!-- Favorite Pair: Cal + Lion -->
+          <div class="box">
+            <h4 class="title is-4">Example 1: Cal Oski + Lion</h4>
+            <div class="columns">
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 1: Cal Oski</h5>
+                <img src="./static/images/project_2/results/part2-Hybrid/fav_pair/cal.jpg" alt="Cal input" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 2: Lion</h5>
+                <img src="./static/images/project_2/results/part2-Hybrid/fav_pair/lion.jpg" alt="Lion input" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Hybrid Result</h5>
+                <img src="./static/images/project_2/results/part2-Hybrid/fav_pair/hybrid_gray.jpg" alt="Cal Lion hybrid" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+
+          <div class="box">
+            <h4 class="title is-4">Frequency Analysis</h4>
+            <img src="./static/images/project_2/results/part2-Hybrid/fav_pair/frequency_analysis.jpg" alt="Frequency analysis" style="width: 100%;">
+            <p class="is-size-6">
+              <strong>Top row:</strong> Original images, low-pass filtered image (Gaussian), high-pass filtered image (original - Gaussian), and final hybrid.<br>
+              <strong>Bottom row:</strong> Log magnitude of Fourier transforms showing frequency content.<br>
+              <strong>• Low Frequencies:</strong> Energy confined near the center of the Fourier plane. This shows that the Gaussian filter suppresses high-frequency content, leaving only broad structures.<br>
+              <strong>• High Frequencies:</strong> Energy distributed away from the center. Central region is attenuated (Though small), confirming removal of low frequencies and preservation of high frequency edges/textures.<br>
+              <strong>• Hybrid:</strong> Contains both strong central low-frequency components and extended high-frequency patterns. This illustrates the hybridization process clearly: both global smooth structure and sharp details coexist in the frequency spectrum.
+            </p>
+          </div>
+
+          
+          <div class="box">
+            <h4 class="title is-5">Example 2: Jackie Chan + Panda</h4>
+            <div class="columns">
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 1: Jackie Chan</h5>
+                <img src="./static/images/project_2/results/part2-Hybrid/pairs_1/Jackie-Chan.jpg" alt="Jackie Chan input" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 2: Panda</h5>
+                <img src="./static/images/project_2/results/part2-Hybrid/pairs_1/panda.jpg" alt="Panda input" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Hybrid Result</h5>
+                <img src="./static/images/project_2/results/part2-Hybrid/pairs_1/hybrid_gray_2.jpg" alt="Jackie Chan Panda hybrid" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+
+          <div class="box">
+            <h4 class="title is-5">Example 3: Playing basketball</h4>
+            <div class="columns">
+              <div class="column is-one-third">
+                <h5 class="title is-6">Personal Input 1</h5>
+                <img src="./static/images/project_2/results/part2-Hybrid/pairs_2/kun_1.jpeg" alt="Personal input 1" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Personal Input 2</h5>
+                <img src="./static/images/project_2/results/part2-Hybrid/pairs_2/kun_2.jpeg" alt="Personal input 2" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Hybrid Result</h5>
+                <img src="./static/images/project_2/results/part2-Hybrid/pairs_2/hybrid_gray_3.jpg" alt="Personal hybrid" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+
+          <div class="box has-background-info-light">
+            <h4 class="title is-5">Implementation Details</h4>
+            <ul class="is-size-5">
+              <li><strong>Low-pass filter:</strong> 2D Gaussian filter to extract low frequencies</li>
+              <li><strong>High-pass filter:</strong> Original image - low-pass filtered image</li>
+              <li><strong>Alignment:</strong> Imporoved alignment code by using OpenCV</li>
+              <li><strong>Cutoff frequencies:</strong> Chosen through experimentation to balance visibility at different viewing distances</li>
+              <li><strong>Frequency analysis:</strong> FFT visualization shows how different frequency components are preserved and combined</li>
+            </ul>
+          </div>
+
+          <!-- Part 2.3: Gaussian and Laplacian Stacks -->
+          <h2 class="title is-3">Part 2.3: Gaussian and Laplacian Stacks</h2>
+          <p class="is-size-5">
+            Gaussian stacks apply successive blur operations, while Laplacian stacks capture the differences between 
+            consecutive Gaussian levels, representing different frequency bands.
+          </p>
+
+                    <!-- Apple + Orange (Classic) -->
+                    <div class="box">
+                        <h4 class="title is-4">Apple + Orange (Oraple)</h4>
+                        <div class="columns">
+                          <div class="column is-one-third">
+                            <h5 class="title is-6">Input 1: Apple</h5>
+                            <img src="./static/images/project_2/results/part2-Blend/part_2.3/apple.jpeg" alt="Apple input" style="width: 100%;">
+                            <p class="is-size-6"><em>Left side source</em></p>
+                          </div>
+                          <div class="column is-one-third">
+                            <h5 class="title is-6">Input 2: Orange</h5>
+                            <img src="./static/images/project_2/results/part2-Blend/part_2.3/orange.jpeg" alt="Orange input" style="width: 100%;">
+                            <p class="is-size-6"><em>Right side source</em></p>
+                          </div>
+                          <div class="column is-one-third">
+                            <h5 class="title is-6">Blended Result</h5>
+                            <img src="./static/images/project_2/results/part2-Blend/part_2.3/outputs/part24_strict/blended_vertical.png" alt="Apple Orange blend" style="width: 100%;">
+                            <p class="is-size-6"><em>The classic "oraple"</em></p>
+                          </div>
+                        </div>
+                      </div>
+            
+                      <div class="columns">
+                        <div class="column is-full">
+                          <div class="box">
+                            <h4 class="title is-5">Blending Process Visualization</h4>
+                            <img src="./static/images/project_2/results/part2-Blend/part_2.3/outputs/part24_strict/Figure 3.42.png" alt="Blending levels" style="width: 100%;">
+                            <p class="is-size-6">Detailed breakdown showing how different frequency bands are combined in the multiresolution blending process</p>
+                          </div>
+                        </div>
+                      </div>
+          <!-- Part 2.4: Multiresolution Blending -->
+          <h2 class="title is-3">Part 2.4: Multiresolution Blending</h2>
+          <p class="is-size-5">
+            Using Laplacian stacks and Gaussian masks, we can seamlessly blend images by combining different frequency 
+            bands according to a mask, creating natural-looking composites.
+          </p>
+
+
+
+          <!-- Landscape Blending Example 1 -->
+          <div class="box">
+            <h4 class="title is-4">Example 1: Labubu</h4>
+            <div class="columns">
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 1</h5>
+                <img src="./static/images/project_2/results/part2-Blend/blend_1/1.jpg" alt="Landscape input 1" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 2</h5>
+                <img src="./static/images/project_2/results/part2-Blend/blend_1/2.jpg" alt="Landscape input 2" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Blended Result</h5>
+                <img src="./static/images/project_2/results/part2-Blend/blend_1/outputs/part24_strict/blended_vertical.png" alt="Landscape blend" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+
+          <div class="columns">
+            <div class="column is-full">
+              <div class="box">
+                <h4 class="title is-5">Blending Process Visualization</h4>
+                <img src="./static/images/project_2/results/part2-Blend/blend_1/outputs/part24_strict/blend_vertical_levels.png" alt="Blending levels" style="width: 100%;">
+                <p class="is-size-6">Detailed breakdown showing how different frequency bands are combined in the multiresolution blending process</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Landscape Blending Example 2 -->
+          <div class="box">
+            <h4 class="title is-4">Example 2: Monet's Paintings</h4>
+            <div class="columns">
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 1</h5>
+                <img src="./static/images/project_2/results/part2-Blend/blend_2/1.jpg" alt="Landscape input 1" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 2</h5>
+                <img src="./static/images/project_2/results/part2-Blend/blend_2/2.jpg" alt="Landscape input 2" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Blended Result</h5>
+                <img src="./static/images/project_2/results/part2-Blend/blend_2/outputs/part24_strict/blended_vertical.png" alt="Landscape blend 2" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+
+          <div class="box">
+            <h4 class="title is-4">Example 3: Irregular Mask Blending</h4>
+            <div class="columns">
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 1</h5>
+                <img src="./static/images/project_2/results/part2-Blend/blend_3-irregular/1.jpeg" alt="Irregular input 1" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Input 2</h5>
+                <img src="./static/images/project_2/results/part2-Blend/blend_3-irregular/wood.jpg" alt="Wood texture" style="width: 100%;">
+              </div>
+              <div class="column is-one-third">
+                <h5 class="title is-6">Blended Result</h5>
+                <img src="./static/images/project_2/results/part2-Blend/blend_3-irregular/outputs/part24_strict/blended_vertical.png" alt="Irregular blend" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        This website was adapted from <a href="https://github.com/nerfies/nerfies.github.io">nerfies's website</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
