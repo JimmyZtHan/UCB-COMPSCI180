@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="CS180 Project 3 - Image Warping and Mosaicing: Implementation of homography computation, image warping, and mosaic creation">
+  <meta name="keywords" content="CS180, Computer Vision, Image Warping, Mosaicing, Homography, Perspective Transform">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CS180 Project 3</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  
+  <!-- MathJax for LaTeX equations -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    };
+  </script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://cal-cs180.github.io/fa25/">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      <span>CS180 Home</span>
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          Projects
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="./index.html">
+            Project 0
+          </a>
+          <a class="navbar-item" href="./project1.html">
+            Project 1
+          </a>
+          <a class="navbar-item" href="./project2.html">
+            Project 2
+          </a>
+          <a class="navbar-item" href="./project3.html">
+            Project 3
+          </a>
+        </div>
+      </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">CS180 Project 3: Image Warping and Mosaicing</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">CS180: Intro to Computer Vision and Computational Photography</span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Fall 2025</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column">
+        <div class="content">
+
+
+          <!-- Part A.1: Shoot the Pictures -->
+          <h2 class="title is-3">Part A.1: Shoot and Digitize Pictures</h2>
+
+          <div class="box">
+            <h4 class="title is-4">Image Set 1: Parking Lot Scene</h4>
+            <div class="columns">
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Left View</h5>
+                  <img src="./static/images/project_3/PartA/IMG_lot_1.jpg" alt="Parking lot left view" style="width: 100%;">
+                </div>
+              </div>
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Right View</h5>
+                  <img src="./static/images/project_3/PartA/IMG_lot_2.jpg" alt="Parking lot right view" style="width: 100%;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="box">
+            <h4 class="title is-4">Image Set 2: Desktop Scene</h4>
+            <div class="columns">
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Left View</h5>
+                  <img src="./static/images/project_3/PartA/IMG_view_1.jpg" alt="Desktop left view" style="width: 100%;">
+                </div>
+              </div>
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Right View</h5>
+                  <img src="./static/images/project_3/PartA/IMG_view_2.jpg" alt="Desktop right view" style="width: 100%;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Part A.2: Recover Homographies -->
+          <h2 class="title is-3">Part A.2: Recover Homographies</h2>
+          <!-- <p class="is-size-5">
+            To align images, we need to compute the homography matrix $\mathbf{H}$ that relates corresponding points 
+            between two images: $\mathbf{p'} = \mathbf{H}\mathbf{p}$. This 3×3 matrix has 8 degrees of freedom and can be computed 
+            from at least 4 point correspondences using least-squares optimization.
+          </p> -->
+
+          <div class="box" id="homography-estimation">
+            <h4 class="title is-4">Homography Estimation (DLT)</h4>
+            <p class="is-size-5">
+              We estimate a projective transform <em>H</em> that maps source points \((x,y)\) (from <code>im2_pts</code>) to target points \((x',y')\) (from <code>im1_pts</code>):
+            </p>
+          
+            <div class="content has-text-centered" style="margin: 16px 0;">
+              $$\begin{aligned}
+                x' &= \frac{h_1 x + h_2 y + h_3}{h_7 x + h_8 y + h_9}, \\
+                y' &= \frac{h_4 x + h_5 y + h_6}{h_7 x + h_8 y + h_9}.
+              \end{aligned}$$
+            </div>
+          
+            <p class="is-size-5">
+              Rearranging gives two linear equations per correspondence:
+            </p>
+            <div class="content has-text-centered" style="margin: 16px 0;">
+              $$x'(h_7 x + h_8 y + h_9) = h_1 x + h_2 y + h_3,$$
+              $$y'(h_7 x + h_8 y + h_9) = h_4 x + h_5 y + h_6.$$
+            </div>
+          
+            <p class="is-size-5">
+              Stacking the equations for \(n\) correspondences yields a homogeneous system \(\mathbf{A}\mathbf{h}= \mathbf{0}\) with \(\mathbf{h}=[h_1,\dots,h_9]^T\) and \(\mathbf{A}\in\mathbb{R}^{2n\times 9}\):
+            </p>
+          
+            <div class="content has-text-centered" style="margin: 16px 0;">
+              $$\mathbf{A} =
+              \begin{bmatrix}
+                x_1 & y_1 & 1 & 0 & 0 & 0 & -x'_1 x_1 & -x'_1 y_1 & -x'_1 \\
+                0 & 0 & 0 & x_1 & y_1 & 1 & -y'_1 x_1 & -y'_1 y_1 & -y'_1 \\
+                \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+                x_n & y_n & 1 & 0 & 0 & 0 & -x'_n x_n & -x'_n y_n & -x'_n \\
+                0 & 0 & 0 & x_n & y_n & 1 & -y'_n x_n & -y'_n y_n & -y'_n
+              \end{bmatrix}$$
+            </div>
+          
+            <p class="is-size-5"><strong>Solution via SVD:</strong> Compute the SVD of \(\mathbf{A}\), \(\mathbf{A}=\mathbf{U}\mathbf{\Sigma}\mathbf{V}^\top\).
+              The homography parameter vector \(\mathbf{h}\) is the right singular vector corresponding to the smallest singular value (last column of \(\mathbf{V}\)).
+              Reshape \(\mathbf{h}\) into \(3\times 3\) to obtain \(\mathbf{H}\), then normalize so that \(H_{33}=1\).
+            </p>
+          
+
+          <div class="box">
+            <h4 class="title is-4">Point Correspondences Visualization</h4>
+            <img src="./static/images/project_3/PartA/correspondences.png" alt="Point correspondences" style="width: 100%;">
+          </div>
+
+          <div class="box">
+            <h4 class="title is-4">Recovered Homography Matrix</h4>
+            <p class="is-size-5">
+              The estimated homography matrix \(\mathbf{H}\) from the point correspondences:
+            </p>
+            <div class="content has-text-centered" style="margin: 16px 0;">
+              $$\mathbf{H} = \begin{bmatrix}
+                5.44142214\times10^{-1} & -8.14588428\times10^{-2} & 1.59557896\times10^{3} \\
+                -2.67150601\times10^{-1} & 7.27328549\times10^{-1} & 5.36013994\times10^{2} \\
+                -8.47334485\times10^{-5} & -2.77317388\times10^{-5} & 1.00000000
+              \end{bmatrix}$$
+            </div>
+          </div>
+
+          <!-- Part A.3: Warp the Images -->
+          <h2 class="title is-3">Part A.3: Warp the Images</h2>
+
+          <div class="box">
+            <h4 class="title is-4">Inverse Warping Implementation</h4>
+            <div class="columns">
+              <div class="column is-half">
+                <h5 class="title is-6">Nearest Neighbor Interpolation</h5>
+                <p class="is-size-6">
+                  Uses inverse warping to avoid holes in the output image. For each output pixel, 
+                  we compute the corresponding source pixel location using the inverse homography, 
+                  then round to the nearest integer coordinates to sample the source image.
+                </p>
+              </div>
+              <div class="column is-half">
+                <h5 class="title is-6">Bilinear Interpolation</h5>
+                <p class="is-size-6">
+                  Similar to nearest neighbor but uses weighted averaging of the four neighboring 
+                  pixels in the source image. The weights are computed based on the fractional 
+                  part of the transformed coordinates, resulting in smoother output images.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="box">
+            <h4 class="title is-4">Rectification Examples</h4>
+            <p class="is-size-5">
+              Before creating mosaics, I tested the warping implementation by performing rectification - 
+              correcting perspective distortion in images of planar objects to make them appear frontal.
+            </p>
+            
+            <div class="box">
+              <h5 class="title is-6">Rectification Example 1</h5>
+              <img src="./static/images/project_3/PartA/rectification_1.jpg" alt="Rectification example 1" style="width: 100%;">
+            </div>
+            
+            <div class="box">
+              <h5 class="title is-6">Rectification Example 2</h5>
+              <img src="./static/images/project_3/PartA/rectification_2.jpg" alt="Rectification example 2" style="width: 100%;">
+            </div>
+          </div>
+
+          <div class="box has-background-info-light">
+            <h4 class="title is-5">Interpolation Comparison</h4>
+            <div class="columns">
+              <div class="column is-half">
+                <h5 class="title is-6">Nearest Neighbor</h5>
+                <ul class="is-size-6">
+                  <li><strong>Pros:</strong> Fast computation, preserves sharp edges</li>
+                  <li><strong>Cons:</strong> Blocky artifacts, aliasing</li>
+                  <li><strong>Best for:</strong> Binary images, when speed is critical</li>
+                </ul>
+              </div>
+              <div class="column is-half">
+                <h5 class="title is-6">Bilinear</h5>
+                <ul class="is-size-6">
+                  <li><strong>Pros:</strong> Smooth results, reduces aliasing</li>
+                  <li><strong>Cons:</strong> Slightly slower, can blur sharp edges</li>
+                  <li><strong>Best for:</strong> Natural images, when quality is important</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Part A.4: Blend Images into Mosaics -->
+          <h2 class="title is-3">Part A.4: Blend Images into a Mosaic</h2>
+
+          <div class="box">
+            <h4 class="title is-4">Blending Algorithm</h4>
+            <div class="columns">
+              <div class="column is-half">
+                <h5 class="title is-6">Alpha Mask Generation</h5>
+                <p class="is-size-6">
+                  Alpha masks are generated using distance transforms to create smooth falloff from 
+                  the center of each image to its edges. This ensures that pixels near the center 
+                  of each image have higher weights, while edge pixels have lower weights.
+                </p>
+              </div>
+              <div class="column is-half">
+                <h5 class="title is-6">Weighted Blending</h5>
+                <p class="is-size-6">
+                  The final mosaic is created using normalized weighted averaging. Each pixel in 
+                  the output is computed as the weighted sum of all contributing input pixels, 
+                  divided by the sum of weights. This creates smooth transitions in overlap regions.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="box">
+            <h4 class="title is-4">Mosaic 1: </h4>
+            
+            <div class="columns">
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Source Image 1</h5>
+                  <img src="./static/images/project_3/PartA/IMG_lot_1.jpg"  style="width: 100%;">
+                </div>
+              </div>
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Source Image 2</h5>
+                  <img src="./static/images/project_3/PartA/IMG_lot_2.jpg"  style="width: 100%;">
+                </div>
+              </div>
+            </div>
+            
+            <div class="columns">
+              <div class="column">
+                <div class="box">
+                  <h5 class="title is-6">Mosaic Result (Bilinear)</h5>
+                  <img src="./static/images/project_3/PartA/lot_mosaic_bilinear.jpg" alt="Parking lot mosaic bilinear" style="width: 100%;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="columns">
+            <div class="column">
+              <div class="box">
+                <h5 class="title is-6">Mosaic Result (nearest)</h5>
+                <img src="./static/images/project_3/PartA/lot_mosaic_nearest.jpg" alt="Parking lot mosaic nearest" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+
+          <div class="box">
+            <h4 class="title is-4">Mosaic 2:</h4>
+            
+            <div class="columns">
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Source Image 1</h5>
+                  <img src="./static/images/project_3/PartA/IMG_view_1.jpg" alt="Desktop left view" style="width: 100%;">
+                </div>
+              </div>
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Source Image 2</h5>
+                  <img src="./static/images/project_3/PartA/IMG_view_2.jpg" alt="Desktop right view" style="width: 100%;">
+                </div>
+              </div>
+            </div>
+            
+            <div class="columns">
+              <div class="column">
+                <div class="box">
+                  <h5 class="title is-6">Mosaic Result (Bilinear)</h5>
+                  <img src="./static/images/project_3/PartA/desktop_mosaic_bilinear.jpg" alt="Desktop mosaic bilinear" style="width: 100%;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="columns">
+            <div class="column">
+              <div class="box">
+                <h5 class="title is-6">Mosaic Result (nearest)</h5>
+                <img src="./static/images/project_3/PartA/desktop_mosaic_nearest.jpg" alt="Desktop mosaic nearest" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+          <div class="box">
+            <h4 class="title is-4">Mosaic 3: Interpolation Comparison</h4>
+            
+            <div class="columns">
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Source Image 1</h5>
+                  <img src="./static/images/project_3/PartA/IMG_blouder.jpg" alt="Desktop left view" style="width: 100%;">
+                </div>
+              </div>
+              <div class="column is-half">
+                <div class="box">
+                  <h5 class="title is-6">Source Image 2</h5>
+                  <img src="./static/images/project_3/PartA/IMG_blouder_2.jpg" alt="Desktop right view" style="width: 100%;">
+                </div>
+              </div>
+            </div>
+            
+            <div class="columns">
+              <div class="column">
+                <div class="box">
+                  <h5 class="title is-6">Mosaic Result (Bilinear)</h5>
+                  <img src="./static/images/project_3/PartA/blouder_mosaic_bilinear.jpg" alt="Desktop mosaic bilinear" style="width: 100%;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="columns">
+            <div class="column">
+              <div class="box">
+                <h5 class="title is-6">Mosaic Result (nearest)</h5>
+                <img src="./static/images/project_3/PartA/blouder_mosaic_nearest.jpg" alt="Desktop mosaic nearest" style="width: 100%;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+          <div class="box has-background-info-light">
+            <h4 class="title is-5">Complete Procedure Explanation</h4>
+            <p class="is-size-5">
+              The mosaic creation process follows these systematic steps:
+            </p>
+            <ol class="is-size-5">
+              <li><strong>Image Capture:</strong> Take overlapping photographs from a fixed center of projection, rotating the camera between shots to ensure projective transformations.</li>
+              <li><strong>Point Selection:</strong> Manually select 4 corresponding feature points in both images using distinctive landmarks like corners, intersections, and high-contrast edges.</li>
+              <li><strong>Homography Computation:</strong> Set up an overdetermined linear system from the point correspondences and solve using SVD to find the 3×3 homography matrix.</li>
+              <li><strong>Canvas Size Calculation:</strong> Determine the output mosaic dimensions by transforming the corners of both images and computing the union of their bounding boxes.</li>
+              <li><strong>Image Warping:</strong> Apply inverse warping to transform the second image into the coordinate system of the first image using either nearest neighbor or bilinear interpolation.</li>
+              <li><strong>Alpha Mask Generation:</strong> Create distance-based alpha masks for each image to ensure smooth blending, with higher weights at image centers and gradual falloff toward edges.</li>
+              <li><strong>Weighted Blending:</strong> Combine the warped images using normalized weighted averaging.</li>
+            </ol>
+          </div>
+
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        This website was adapted from <a href="https://github.com/nerfies/nerfies.github.io">nerfies's website</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
