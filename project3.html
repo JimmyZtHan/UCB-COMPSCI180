@@ -437,6 +437,204 @@
             </ol>
           </div>
 
+          <!-- Part B: Feature Matching for Autostitching -->
+          <h2 class="title is-2">Part B: Feature Matching for Autostitching</h2>
+          
+          <p class="is-size-5">
+            In Part A, we manually selected corresponding points between images to compute homographies. 
+            Part B automates this process by detecting, describing, and matching features automatically using 
+            the Harris corner detector, feature descriptors, and robust matching techniques.
+          </p>
+
+          <!-- Part B.1: Harris Corner Detection -->
+          <h2 class="title is-3">Part B.1: Harris Corner Detection</h2>
+          
+          <div class="box">
+            <h4 class="title is-4">Harris Corner Detector</h4>
+            <p class="is-size-5">
+              The Harris corner detector identifies interest points by analyzing the local image structure. 
+            </p>
+            
+            <div class="box">
+              <h5 class="title is-6">Harris Corners Detection Result</h5>
+              <img src="./static/images/project_3/PartB/output_bouldering/harris_corners.jpg" alt="Harris corners detected" style="width: 100%;">
+              <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                <em>Harris corners overlaid on the bouldering scene. Red dots indicate detected corner points.</em>
+              </p>
+            </div>
+          </div>
+
+          <div class="box">
+            <h4 class="title is-4">Adaptive Non-Maximal Suppression (ANMS)</h4>
+            <p class="is-size-5">
+              ANMS reduces the number of detected corners by selecting a spatially distributed subset. 
+              For each corner, it computes the minimum suppression radius - the distance to the nearest 
+              stronger corner. Only corners with large suppression radii are retained, ensuring good 
+              spatial distribution across the image.
+            </p>
+            
+            <div class="box">
+              <h5 class="title is-6">ANMS Result</h5>
+              <img src="./static/images/project_3/PartB/output_bouldering/anms_corners.jpg" alt="ANMS corners" style="width: 100%;">
+              <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                <em>Selected corners after ANMS. Green dots show the spatially distributed subset of corners.</em>
+              </p>
+            </div>
+          </div>
+
+          <!-- Part B.2: Feature Descriptor Extraction -->
+          <h2 class="title is-3">Part B.2: Feature Descriptor Extraction</h2>
+          
+          <div class="box">
+            <h4 class="title is-4">8x8 Feature Descriptors</h4>
+            <p class="is-size-5">
+              For each detected corner, we extract an 8×8 feature descriptor by sampling from a larger 40×40 
+              window around the corner. Each descriptor is bias/gain normalized 
+              to have zero mean and unit variance for robust matching.
+            </p>
+            
+            <div class="box">
+              <h5 class="title is-6">Example Feature Descriptors</h5>
+              <div class="columns">
+                <div class="column">
+                  <img src="./static/images/project_3/PartB/output_bouldering/patch_examples/descriptor_patch_1.jpg" alt="Descriptor patch 1" style="width: 100%;">
+                </div>
+                <div class="column">
+                  <img src="./static/images/project_3/PartB/output_bouldering/patch_examples/descriptor_patch_2.jpg" alt="Descriptor patch 2" style="width: 100%;">
+                </div>
+                <div class="column">
+                  <img src="./static/images/project_3/PartB/output_bouldering/patch_examples/descriptor_patch_3.jpg" alt="Descriptor patch 3" style="width: 100%;">
+                </div>
+                <div class="column">
+                  <img src="./static/images/project_3/PartB/output_bouldering/patch_examples/descriptor_patch_4.jpg" alt="Descriptor patch 4" style="width: 100%;">
+                </div>
+                <div class="column">
+                  <img src="./static/images/project_3/PartB/output_bouldering/patch_examples/descriptor_patch_5.jpg" alt="Descriptor patch 5" style="width: 100%;">
+                </div>
+              </div>
+              <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                <em>Sample 8×8 normalized feature descriptors extracted from detected corners.</em>
+              </p>
+            </div>
+          </div>
+
+          <!-- Part B.3: Feature Matching -->
+          <h2 class="title is-3">Part B.3: Feature Matching</h2>
+          
+          <div class="box">
+            <h4 class="title is-4">Lowe's Ratio Test</h4>
+            <p class="is-size-5">
+              Feature matching uses Lowe's ratio test to identify reliable correspondences. For each feature 
+              in the first image, we find its two nearest neighbors in the second image based on descriptor 
+              distance (SSD). A match is accepted only if the ratio of distances to the first and second 
+              nearest neighbors is below a threshold (typically 0.4-0.6), indicating a distinctive match.
+            </p>
+            
+            <div class="box">
+              <h5 class="title is-6">Feature Matches</h5>
+              <img src="./static/images/project_3/PartB/output_bouldering/matched_features.jpg" alt="Matched features" style="width: 100%;">
+              <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                <em>Matched features between the two bouldering images. Lines connect corresponding feature points.</em>
+              </p>
+            </div>
+          </div>
+
+          <!-- Part B.4: RANSAC for Robust Homography -->
+          <h2 class="title is-3">Part B.4: RANSAC for Robust Homography</h2>
+          
+          <div class="box">
+            <h4 class="title is-4">4-Point RANSAC Implementation</h4>
+            <p class="is-size-5">
+              RANSAC (Random Sample Consensus) robustly estimates homographies in the presence of outliers. 
+              The algorithm repeatedly samples 4 random feature correspondences, computes a homography, 
+              and counts inliers (correspondences that agree with this homography within a threshold). 
+              The homography with the most inliers is selected as the final estimate.
+            </p>
+          </div>
+
+          <div class="box">
+            <h4 class="title is-4">Manual vs Automatic Stitching Comparison</h4>
+            <p class="is-size-5">
+              Below we compare the results of manual point selection (Part A) with automatic feature 
+              matching and RANSAC (Part B) for three different image pairs.
+            </p>
+
+            <!-- Comparison 1: Parking Lot -->
+            <div class="box">
+              <h5 class="title is-5">Comparison 1:</h5>
+              <div class="columns">
+                <div class="column is-half">
+                  <div class="box">
+                    <h6 class="title is-6">Manual Stitching (Part A)</h6>
+                    <img src="./static/images/project_3/PartA/lot_mosaic_bilinear.jpg" alt="Manual lot mosaic" style="width: 100%;">
+                    <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                      <em>Result using manually selected correspondences</em>
+                    </p>
+                  </div>
+                </div>
+                <div class="column is-half">
+                  <div class="box">
+                    <h6 class="title is-6">Automatic Stitching (Part B)</h6>
+                    <img src="./static/images/project_3/PartB/output_lot/mosaic_automatic.jpg" alt="Automatic lot mosaic" style="width: 100%;">
+                    <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                      <em>Result using automatic feature matching + RANSAC</em>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Comparison 2: Kitchen Scene -->
+            <div class="box">
+              <h5 class="title is-5">Comparison 2:</h5>
+              <div class="columns">
+                <div class="column is-half">
+                  <div class="box">
+                    <h6 class="title is-6">Manual Stitching (Part A)</h6>
+                    <img src="./static/images/project_3/PartA/desktop_mosaic_bilinear.jpg" alt="Manual desktop mosaic" style="width: 100%;">
+                    <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                      <em>Result using manually selected correspondences</em>
+                    </p>
+                  </div>
+                </div>
+                <div class="column is-half">
+                  <div class="box">
+                    <h6 class="title is-6">Automatic Stitching (Part B)</h6>
+                    <img src="./static/images/project_3/PartB/output_desktop/mosaic_automatic.jpg" alt="Automatic kitchen mosaic" style="width: 100%;">
+                    <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                      <em>Result using automatic feature matching + RANSAC</em>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Comparison 3: Bouldering Scene -->
+            <div class="box">
+              <h5 class="title is-5">Comparison 3: </h5>
+              <div class="columns">
+                <div class="column is-half">
+                  <div class="box">
+                    <h6 class="title is-6">Manual Stitching (Part A)</h6>
+                    <img src="./static/images/project_3/PartA/blouder_mosaic_bilinear.jpg" alt="Manual bouldering mosaic" style="width: 100%;">
+                    <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                      <em>Result using manually selected correspondences</em>
+                    </p>
+                  </div>
+                </div>
+                <div class="column is-half">
+                  <div class="box">
+                    <h6 class="title is-6">Automatic Stitching (Part B)</h6>
+                    <img src="./static/images/project_3/PartB/output_bouldering/mosaic_automatic.jpg" alt="Automatic bouldering mosaic" style="width: 100%;">
+                    <p class="is-size-6 has-text-centered" style="margin-top: 8px;">
+                      <em>Result using automatic feature matching + RANSAC</em>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
 
             </div>
           </div>
